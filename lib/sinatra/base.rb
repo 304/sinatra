@@ -1065,7 +1065,7 @@ module Sinatra
         @params = @params.merge(params)
       end
 
-      regexp_exists = pattern.is_a?(Mustermann::Regular) || (pattern.respond_to?(:patterns) && pattern.patterns.any? { |subpattern| subpattern.is_a?(Mustermann::Regular) } )
+      regexp_exists = pattern.is_a?(Mustermann::Regular) || (pattern.respond_to?(:patterns) && pattern.patterns.any? { |subpattern| subpattern.is_a?(Mustermann::Regular) })
       if regexp_exists
         captures           = pattern.match(route).captures.map { |c| URI_INSTANCE.unescape(c) if c }
         values            += captures
@@ -1101,7 +1101,7 @@ module Sinatra
     def static!(options = {})
       return if (public_dir = settings.public_folder).nil?
 
-      path = File.expand_path("#{public_dir}#{URI_INSTANCE.unescape(request.path_info)}" )
+      path = File.expand_path("#{public_dir}#{URI_INSTANCE.unescape(request.path_info)}")
       return unless File.file?(path)
 
       env['sinatra.static_file'] = path
@@ -1362,7 +1362,7 @@ module Sinatra
 
         return unless data
 
-        if app && app =~ ( /([^\n]*\n)?#[^\n]*coding: *(\S+)/m)
+        if app && app =~ (/([^\n]*\n)?#[^\n]*coding: *(\S+)/m)
           encoding = $2
         else
           encoding = settings.default_encoding

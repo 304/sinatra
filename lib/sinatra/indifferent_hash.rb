@@ -111,23 +111,29 @@ module Sinatra
     end
 
     # Added in Ruby 2.3
-    def dig(key, *other_keys)
-      super(convert_key(key), *other_keys)
-    end if method_defined?(:dig)
+    if method_defined?(:dig)
+      def dig(key, *other_keys)
+        super(convert_key(key), *other_keys)
+      end
+    end
 
     # Added in Ruby 2.3
-    def fetch_values(*keys)
-      keys.map!(&method(:convert_key))
+    if method_defined?(:fetch_values)
+      def fetch_values(*keys)
+        keys.map!(&method(:convert_key))
 
-      super(*keys)
-    end if method_defined?(:fetch_values)
+        super(*keys)
+      end
+    end
 
     # Added in Ruby 2.5
-    def slice(*keys)
-      keys.map!(&method(:convert_key))
+    if method_defined?(:slice)
+      def slice(*keys)
+        keys.map!(&method(:convert_key))
 
-      self.class[super(*keys)]
-    end if method_defined?(:slice)
+        self.class[super(*keys)]
+      end
+    end
 
     def values_at(*keys)
       keys.map!(&method(:convert_key))

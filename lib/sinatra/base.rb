@@ -193,7 +193,8 @@ module Sinatra
   # still be able to run.
   class ExtendedRack < Struct.new(:app)
     def call(env)
-      result, callback = app.call(env), env['async.callback']
+      result = app.call(env)
+      callback = env['async.callback']
       return result unless callback && async?(*result)
 
       after_response { callback.call result }
@@ -311,7 +312,10 @@ module Sinatra
 
     # Halt processing and return the error status provided.
     def error(code, body = nil)
-      code, body    = 500, code.to_str if code.respond_to? :to_str
+      if code.respond_to? :to_str
+        body = code.to_str
+        code = 500
+      end
       response.body = body unless body.nil?
       halt code
     end
@@ -421,8 +425,11 @@ module Sinatra
       end
 
       def initialize(scheduler = self.class, keep_open = false, &back)
-        @back, @scheduler, @keep_open = back.to_proc, scheduler, keep_open
-        @callbacks, @closed = [], false
+        @back = back.to_proc
+        @scheduler = scheduler
+        @keep_open = keep_open
+        @callbacks = []
+        @closed = false
       end
 
       def close
@@ -658,7 +665,8 @@ module Sinatra
     end
 
     def with_params(temp_params)
-      original, @params = @params, temp_params
+      original = @params
+      @params = temp_params
       yield
     ensure
       @params = original if original
@@ -813,7 +821,10 @@ module Sinatra
 
     # logic shared between builder and nokogiri
     def render_ruby(engine, template, options = {}, locals = {}, &block)
-      options, template = template, nil if template.is_a?(Hash)
+      if template.is_a?(Hash)
+        options = template
+        template = nil
+      end
       template = proc { block } if template.nil?
       render engine, template, options, locals
     end
@@ -1036,7 +1047,10 @@ module Sinatra
 
       params.delete('ignore') # TODO: better params handling, maybe turn it into "smart" object or detect changes
       force_encoding(params)
-      original, @params = @params, @params.merge(params) if params.any?
+      if params.any?
+        original = @params
+        @params = @params.merge(params)
+      end
 
       regexp_exists = pattern.is_a?(Mustermann::Regular) || (pattern.respond_to?(:patterns) && pattern.patterns.any? {|subpattern| subpattern.is_a?(Mustermann::Regular)} )
       if regexp_exists
@@ -1244,7 +1258,10 @@ module Sinatra
       def set(option, value = (not_set = true), ignore_setter = false, &block)
         raise ArgumentError if block && !not_set
 
-        value, not_set = block, false if block
+        if block
+          value = block
+          not_set = false
+        end
 
         if not_set
           raise ArgumentError unless option.respond_to?(:each)
@@ -1663,11 +1680,14 @@ module Sinatra
 
         options.each_pair { |option, args| send(option, *args) }
 
-        pattern                 = compile(path, route_mustermann_opts)
-        method_name             = "#{verb} #{path}"
-        unbound_method          = generate_method(method_name, &block)
-        conditions, @conditions = @conditions, []
-        wrapper                 = block.arity != 0 ?
+        pattern = compile(path, route_mustermann_opts)
+        method_name = "#{verb} #{path}"
+        unbound_method = generate_method(method_name, &block)
+
+        conditions = @conditions
+        @conditions = []
+
+        wrapper = block.arity != 0 ?
           proc { |a, p| unbound_method.bind(a).call(*p) } :
           proc { |a, _p| unbound_method.bind(a).call }
 
@@ -1978,7 +1998,8 @@ module Sinatra
 
   class Wrapper
     def initialize(stack, instance)
-      @stack, @instance = stack, instance
+      @stack = stack
+      @instance = instance
     end
 
     def settings

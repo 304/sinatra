@@ -372,7 +372,7 @@ module Sinatra
     # Use the contents of the file at +path+ as the response body.
     def send_file(path, opts = {})
       if opts[:type] || (not response['Content-Type'])
-        content_type opts[:type] || File.extname(path), :default => 'application/octet-stream'
+        content_type opts[:type] || File.extname(path), default: 'application/octet-stream'
       end
 
       disposition = opts[:disposition]
@@ -507,7 +507,7 @@ module Sinatra
         max_age = time - Time.now
       end
 
-      values.last.merge!(:max_age => max_age)
+      values.last.merge!(max_age: max_age)
       cache_control(*values)
 
       response['Expires'] = time.httpdate
@@ -552,7 +552,7 @@ module Sinatra
     # GET or HEAD, a '304 Not Modified' response is sent.
     def etag(value, options = {})
       # Before touching this code, please double check RFC 2616 14.24 and 14.26.
-      options      = {:kind => options} unless Hash === options
+      options      = {kind: options} unless Hash === options
       kind         = options[:kind] || :strong
       new_resource = options.fetch(:new_resource) { request.post? }
 
@@ -693,22 +693,22 @@ module Sinatra
     end
 
     def sass(template, options = {}, locals = {})
-      options.merge! :layout => false, :default_content_type => :css
+      options.merge! layout: false, default_content_type: :css
       render :sass, template, options, locals
     end
 
     def scss(template, options = {}, locals = {})
-      options.merge! :layout => false, :default_content_type => :css
+      options.merge! layout: false, default_content_type: :css
       render :scss, template, options, locals
     end
 
     def less(template, options = {}, locals = {})
-      options.merge! :layout => false, :default_content_type => :css
+      options.merge! layout: false, default_content_type: :css
       render :less, template, options, locals
     end
 
     def stylus(template, options = {}, locals = {})
-      options.merge! :layout => false, :default_content_type => :css
+      options.merge! layout: false, default_content_type: :css
       render :styl, template, options, locals
     end
 
@@ -746,7 +746,7 @@ module Sinatra
     end
 
     def coffee(template, options = {}, locals = {})
-      options.merge! :layout => false, :default_content_type => :js
+      options.merge! layout: false, default_content_type: :js
       render :coffee, template, options, locals
     end
 
@@ -836,7 +836,7 @@ module Sinatra
 
       # render layout
       if layout
-        options = options.merge(:views => views, :layout => false, :eat_errors => eat_errors, :scope => scope).
+        options = options.merge(views: views, layout: false, eat_errors: eat_errors, scope: scope).
                 merge!(layout_options)
         catch(:layout_missing) { return render(layout_engine, layout, options, locals) { output } }
       end
@@ -1061,7 +1061,7 @@ module Sinatra
 
       env['sinatra.static_file'] = path
       cache_control(*settings.static_cache_control) if settings.static_cache_control?
-      send_file path, options.merge(:disposition => nil)
+      send_file path, options.merge(disposition: nil)
     end
 
     # Run the block with 'throw :halt' support and apply result to the response.
@@ -1184,7 +1184,7 @@ module Sinatra
       def reset!
         @conditions     = []
         @routes         = {}
-        @filters        = {:before => [], :after => []}
+        @filters        = {before: [], after: []}
         @errors         = {}
         @middleware     = []
         @prototype      = nil
@@ -1451,7 +1451,7 @@ module Sinatra
         handler         = detect_rack_handler
         handler_name    = handler.name.gsub(/.*::/, '')
         server_settings = settings.respond_to?(:server_settings) ? settings.server_settings : {}
-        server_settings.merge!(:Port => port, :Host => bind)
+        server_settings.merge!(Port: port, Host: bind)
 
         begin
           start_server(handler, server_settings, handler_name, &block)

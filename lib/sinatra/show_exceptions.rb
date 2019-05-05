@@ -57,7 +57,7 @@ module Sinatra
 
       # This double assignment is to prevent an "unused variable" warning on
       # Ruby 1.9.3.  Yes, it is dumb, but I don't like Ruby yelling at me.
-      frames = frames = exception.backtrace.map { |line|
+      frames = frames = exception.backtrace.map do |line|
         frame = OpenStruct.new
         if line =~ /(.*?):(\d+)(:in `(.*)')?/
           frame.filename = $1
@@ -79,7 +79,7 @@ module Sinatra
         else
           nil
         end
-      }.compact
+      end.compact
 
       TEMPLATE.result(binding)
     end

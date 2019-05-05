@@ -899,7 +899,8 @@ module Sinatra
             @preferred_extension = engine.to_s
             find_template(views, data, template) do |file|
               path ||= file # keep the initial path rather than the last one
-              if found = File.exist?(file)
+              found = File.exist?(file)
+              if found
                 path = file
                 break
               end
@@ -1016,7 +1017,9 @@ module Sinatra
 
     # Run routes defined on the class and all superclasses.
     def route!(base = settings, pass_block = nil)
-      if routes = base.routes[@request.request_method]
+      routes = base.routes[@request.request_method]
+
+      if routes
         routes.each do |pattern, conditions, block|
           returned_pass_block = process_route(pattern, conditions) do |*args|
             env['sinatra.route'] = "#{@request.request_method} #{pattern}"
@@ -1051,7 +1054,9 @@ module Sinatra
       route = @request.path_info
       route = '/' if route.empty? && !settings.empty_path_info?
       route = route[0..-2] if !settings.strict_paths? && route != '/' && route.end_with?('/')
-      return unless params = pattern.params(route)
+
+      params = pattern.params(route)
+      return unless params
 
       params.delete('ignore') # TODO: better params handling, maybe turn it into "smart" object or detect changes
       force_encoding(params)
@@ -1147,9 +1152,12 @@ module Sinatra
 
     # Error handling during requests.
     def handle_exception!(boom)
-      if error_params = @env['sinatra.error.params']
+      error_params = @env['sinatra.error.params']
+
+      if error_params
         @params = @params.merge(error_params)
       end
+
       @env['sinatra.error'] = boom
 
       if boom.respond_to? :http_status
@@ -1184,7 +1192,9 @@ module Sinatra
     def error_block!(key, *block_params)
       base = settings
       while base.respond_to?(:errors)
-        next base = base.superclass unless args_array = base.errors[key]
+        args_array = base.errors[key]
+
+        next base = base.superclass unless args_array
 
         args_array.reverse_each do |args|
           first = args == args_array.first
@@ -1648,11 +1658,14 @@ module Sinatra
         types.map! { |t| mime_types(t) }
         types.flatten!
         condition do
-          if type = response['Content-Type']
-            types.include?(type) || types.include?(type[/^[^;]+/])
-          elsif type = request.preferred_type(types)
-            params = (type.respond_to?(:params) ? type.params : {})
-            content_type(type, params)
+          response_content_type = response['Content-Type']
+          preferred_type = request.preferred_type(types)
+
+          if response_content_type
+            types.include?(response_content_type) || types.include?(response_content_type[/^[^;]+/])
+          elsif preferred_type
+            params = (preferred_type.respond_to?(:params) ? preferred_type.params : {})
+            content_type(preferred_type, params)
             true
           else
             false

@@ -111,7 +111,7 @@ module Sinatra
 
       def priority
         # We sort in descending order; better matches should be higher.
-        [ @q, -@type.count('*'), @params.size ]
+        [@q, -@type.count('*'), @params.size]
       end
 
       def to_str
@@ -1698,7 +1698,7 @@ module Sinatra
           proc { |a, p| unbound_method.bind(a).call(*p) } :
           proc { |a, _p| unbound_method.bind(a).call }
 
-        [ pattern, conditions, wrapper ]
+        [pattern, conditions, wrapper]
       end
 
       def compile(path, route_mustermann_opts = {})

@@ -8,7 +8,7 @@
 #
 # If you have issues with a gem: `bundle install --without-coffee-script`.
 
-RUBY_ENGINE = 'ruby' unless defined? RUBY_ENGINE
+RUBY_ENGINE = 'ruby'.freeze unless defined? RUBY_ENGINE
 source 'https://rubygems.org' unless ENV['QUICK']
 gemspec
 

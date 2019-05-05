@@ -9,7 +9,6 @@ require 'mustermann/sinatra'
 require 'mustermann/regular'
 
 # stdlib dependencies
-require 'thread'
 require 'time'
 require 'uri'
 
@@ -105,7 +104,7 @@ module Sinatra
       end
 
       def <=>(other)
-        other.priority <=> self.priority
+        other.priority <=> priority
       end
 
       def priority
@@ -298,14 +297,14 @@ module Sinatra
       uri = [host = String.new]
       if absolute
         host << "http#{'s' if request.secure?}://"
-        if request.forwarded? || (request.port != (request.secure? ? 443 : 80))
-          host << request.host_with_port
-        else
-          host << request.host
-        end
+        host << if request.forwarded? || (request.port != (request.secure? ? 443 : 80))
+                  request.host_with_port
+                else
+                  request.host
+                end
       end
       uri << request.script_name.to_s if add_script_name
-      uri << (addr ? addr : request.path_info).to_s
+      uri << (addr || request.path_info).to_s
       File.join uri
     end
 
@@ -1077,7 +1076,7 @@ module Sinatra
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
       end
-    rescue
+    rescue StandardError
       @env['sinatra.error.params'] = @params
       raise
     ensure
@@ -1153,9 +1152,7 @@ module Sinatra
     def handle_exception!(boom)
       error_params = @env['sinatra.error.params']
 
-      if error_params
-        @params = @params.merge(error_params)
-      end
+      @params = @params.merge(error_params) if error_params
 
       @env['sinatra.error'] = boom
 
@@ -1243,11 +1240,11 @@ module Sinatra
         @prototype      = nil
         @extensions     = []
 
-        if superclass.respond_to?(:templates)
-          @templates = Hash.new { |_hash, key| superclass.templates[key] }
-        else
-          @templates = {}
-        end
+        @templates = if superclass.respond_to?(:templates)
+                       Hash.new { |_hash, key| superclass.templates[key] }
+                     else
+                       {}
+                     end
       end
 
       # Extension modules registered on this class and all superclasses.
@@ -1350,7 +1347,7 @@ module Sinatra
       # Load embedded templates from the file; uses the caller's __FILE__
       # when no file is specified.
       def inline_templates=(file = nil)
-        file = (file.nil? || file == true) ? (caller_files.first || File.expand_path($0)) : file
+        file = file.nil? || file == true ? (caller_files.first || File.expand_path($0)) : file
 
         begin
           io = ::IO.respond_to?(:binread) ? ::IO.binread(file) : ::IO.read(file)
@@ -1361,11 +1358,11 @@ module Sinatra
 
         return unless data
 
-        if app && app =~ /([^\n]*\n)?#[^\n]*coding: *(\S+)/m
-          encoding = $2
-        else
-          encoding = settings.default_encoding
-        end
+        encoding = if app && app =~ /([^\n]*\n)?#[^\n]*coding: *(\S+)/m
+                     $2
+                   else
+                     settings.default_encoding
+                   end
 
         lines = app.count("\n") + 1
         template = nil
@@ -1386,7 +1383,7 @@ module Sinatra
         return type      if type.nil?
         return type.to_s if type.to_s.include?('/')
 
-        type = ".#{type}" unless type.to_s[0] == ?.
+        type = ".#{type}" unless type.to_s[0] == '.'
         return Rack::Mime.mime_type(type, nil) unless value
 
         Rack::Mime::MIME_TYPES[type] = value
@@ -1397,7 +1394,7 @@ module Sinatra
       #   mime_types :js   # => ['application/javascript', 'text/javascript']
       def mime_types(type)
         type = mime_type type
-        type =~ %r{^application/(xml|javascript)$} ? [type, "text/#$1"] : [type]
+        type =~ %r{^application/(xml|javascript)$} ? [type, "text/#{$1}"] : [type]
       end
 
       # Define a before filter; runs before all requests within the same

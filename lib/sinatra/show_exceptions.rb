@@ -59,26 +59,24 @@ module Sinatra
       # Ruby 1.9.3.  Yes, it is dumb, but I don't like Ruby yelling at me.
       frames = frames = exception.backtrace.map do |line|
         frame = OpenStruct.new
-        if line =~ /(.*?):(\d+)(:in `(.*)')?/
-          frame.filename = $1
-          frame.lineno = $2.to_i
-          frame.function = $4
+        next unless line =~ /(.*?):(\d+)(:in `(.*)')?/
 
-          begin
-            lineno = frame.lineno - 1
-            lines = ::File.readlines(frame.filename)
-            frame.pre_context_lineno = [lineno - CONTEXT, 0].max
-            frame.pre_context = lines[frame.pre_context_lineno...lineno]
-            frame.context_line = lines[lineno].chomp
-            frame.post_context_lineno = [lineno + CONTEXT, lines.size].min
-            frame.post_context = lines[lineno + 1..frame.post_context_lineno]
-          rescue
-          end
+        frame.filename = $1
+        frame.lineno = $2.to_i
+        frame.function = $4
 
-          frame
-        else
-          nil
+        begin
+          lineno = frame.lineno - 1
+          lines = ::File.readlines(frame.filename)
+          frame.pre_context_lineno = [lineno - CONTEXT, 0].max
+          frame.pre_context = lines[frame.pre_context_lineno...lineno]
+          frame.context_line = lines[lineno].chomp
+          frame.post_context_lineno = [lineno + CONTEXT, lines.size].min
+          frame.post_context = lines[lineno + 1..frame.post_context_lineno]
+        rescue StandardError
         end
+
+        frame
       end.compact
 
       TEMPLATE.result(binding)
@@ -91,8 +89,8 @@ module Sinatra
     end
 
     def prefers_plain_text?(env)
-      !(Request.new(env).preferred_type('text/plain', 'text/html') == 'text/html') &&
-      [/curl/].index { |item| item =~ env['HTTP_USER_AGENT'] }
+      Request.new(env).preferred_type('text/plain', 'text/html') != 'text/html' &&
+        [/curl/].index { |item| item =~ env['HTTP_USER_AGENT'] }
     end
 
     def frame_class(frame)
@@ -106,7 +104,7 @@ module Sinatra
       end
     end
 
-TEMPLATE = ERB.new <<-HTML # :nodoc:
+    TEMPLATE = ERB.new <<-HTML # :nodoc:
 <!DOCTYPE html>
 <html>
 <head>
@@ -394,6 +392,6 @@ enabled the <code>show_exceptions</code> setting.</p>
   </div> <!-- /WRAP -->
   </body>
 </html>
-HTML
+    HTML
   end
 end

@@ -86,7 +86,7 @@ module Sinatra
       super(convert_key(key), convert_value(value))
     end
 
-    alias_method :store, :[]=
+    alias store []=
 
     def key(value)
       super(convert_value(value))
@@ -96,15 +96,15 @@ module Sinatra
       super(convert_key(key))
     end
 
-    alias_method :has_key?, :key?
-    alias_method :include?, :key?
-    alias_method :member?, :key?
+    alias has_key? key?
+    alias include? key?
+    alias member? key?
 
     def value?(value)
       super(convert_value(value))
     end
 
-    alias_method :has_value?, :value?
+    alias has_value? value?
 
     def delete(key)
       super(convert_key(key))
@@ -144,7 +144,7 @@ module Sinatra
       self
     end
 
-    alias_method :update, :merge!
+    alias update merge!
 
     def merge(other_hash, &block)
       dup.merge!(other_hash, &block)

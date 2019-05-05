@@ -1783,7 +1783,9 @@ module Sinatra
       data
     end
 
-    def force_encoding(*args) settings.force_encoding(*args) end
+    def force_encoding(*args)
+      settings.force_encoding(*args)
+    end
 
     reset!
 

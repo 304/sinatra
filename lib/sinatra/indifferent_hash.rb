@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-$stderr.puts <<EOF if !Hash.method_defined?(:slice) && !$LOAD_PATH.grep(%r{gems/activesupport}).empty? && ENV['SINATRA_ACTIVESUPPORT_WARNING'] != 'false'
+warn <<EOF if !Hash.method_defined?(:slice) && !$LOAD_PATH.grep(%r{gems/activesupport}).empty? && ENV['SINATRA_ACTIVESUPPORT_WARNING'] != 'false'
 WARNING: If you plan to load any of ActiveSupport's core extensions to Hash, be
 sure to do so *before* loading Sinatra::Application or Sinatra::Base. If not,
 you may disregard this warning.

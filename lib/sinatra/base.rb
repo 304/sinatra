@@ -174,7 +174,7 @@ module Sinatra
     private
 
     def calculate_content_length?
-      headers['Content-Type'] && (not headers['Content-Length']) && (Array === body)
+      headers['Content-Type'] && !headers['Content-Length'] && (Array === body)
     end
 
     def drop_content_info?
@@ -356,7 +356,7 @@ module Sinatra
       fail 'Unknown media type: %p' % type if mime_type.nil?
 
       mime_type = mime_type.dup
-      unless params.include?(:charset) || settings.add_charset.all? { |p| not p === mime_type }
+      unless params.include?(:charset) || settings.add_charset.all? { |p| !(p === mime_type) }
         params[:charset] = params.delete('charset') || settings.default_encoding
       end
       params.delete :charset if mime_type.include? 'charset'
@@ -384,7 +384,7 @@ module Sinatra
 
     # Use the contents of the file at +path+ as the response body.
     def send_file(path, opts = {})
-      if opts[:type] || (not response['Content-Type'])
+      if opts[:type] || !response['Content-Type']
         content_type opts[:type] || File.extname(path), default: 'application/octet-stream'
       end
 
@@ -896,7 +896,7 @@ module Sinatra
                 break
               end
             end
-            throw :layout_missing if eat_errors && (not found)
+            throw :layout_missing if eat_errors && !found
             template.new(path, 1, options)
           end
         when Proc, String
@@ -1041,7 +1041,7 @@ module Sinatra
     # Returns pass block.
     def process_route(pattern, conditions, block = nil, values = [])
       route = @request.path_info
-      route = '/' if route.empty? && (not settings.empty_path_info?)
+      route = '/' if route.empty? && !settings.empty_path_info?
       route = route[0..-2] if !settings.strict_paths? && route != '/' && route.end_with?('/')
       return unless params = pattern.params(route)
 
@@ -1168,7 +1168,7 @@ module Sinatra
       end
 
       res = error_block!(boom.class, boom) || error_block!(status, boom)
-      return res if res || (not server_error?)
+      return res if res || !server_error?
       raise boom if settings.raise_errors? || settings.show_exceptions?
 
       error_block! Exception, boom
@@ -1270,7 +1270,7 @@ module Sinatra
           return self
         end
 
-        if respond_to?("#{option}=") && (not ignore_setter)
+        if respond_to?("#{option}=") && !ignore_setter
           return __send__("#{option}=", value)
         end
 
